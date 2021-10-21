@@ -1,20 +1,60 @@
-import React, {useEffect} from 'react';
-import {View, Text} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  ActivityIndicator,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
+import axios from 'axios';
 
-import {Container} from '../../components'
+import styles from './styles';
 
 const Component = () => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const _getData = async () => {
+    try {
+      setLoading(true);
+      const res = await axios.get('http://192.168.2.6:8000/api/users');
+      console.log(res);
+      setLoading(false);
+      setData(res.data);
+    } catch (err) {
+      console.log(err);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    console.log('halo')
-  },[])
+    _getData();
+  }, []);
 
   return (
-    <View>
-      <Text>Home</Text>
-      <Container title='Pertama' />
-      <Container title='Pertama' />
-      <Container title='Pertama' />
+    <View style={styles.container}>
+      {loading ? (
+        <View style={styles.wrapLoading}>
+          <ActivityIndicator size="large" />
+        </View>
+      ) : (
+        <FlatList
+          data={data}
+          keyExtractor={(item, index) => index.toString()}
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={_getData} />
+          }
+          renderItem={({item}) => (
+            <TouchableOpacity style={styles.wrapItem}>
+              <Text>{`Nama: ${item.name}`}</Text>
+              <Text>{`Alamat: ${item.alamat}`}</Text>
+              <Text>{`Umur: ${item.umur}`}</Text>
+              <Text>{`Harga: ${item.harga}`}</Text>
+            </TouchableOpacity>
+          )}
+        />
+      )}
     </View>
   );
 };
